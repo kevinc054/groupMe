@@ -18,6 +18,7 @@ class Students(db.Model):
     skill = db.Column(db.String(200))
     size = db.Column(db.Integer)
     notes = db.Column(db.Text())
+    group_name = db.Column(db.Integer)
 
 
     def __init__(self, sid, name, course, skill, size, notes):
@@ -27,6 +28,7 @@ class Students(db.Model):
         self.skill = skill
         self.size = size
         self.notes = notes
+        self.group_name = None
 
 @app.route('/')
 def index():
@@ -61,19 +63,25 @@ def submit():
                 db.session.commit()
             run_transaction(sessionmaker, callback)
 
-            if db.session.query(Students).filter(Students.course == course, Students.skill == skill, Students.size == size).count() < int(size):
+            if db.session.query(Students).filter(Students.course == course, Students.skill == skill, Students.size == size, Students.group_name == None).count() < int(size):
                 def callback(session):
                     return render_template('searching.html')
                 return run_transaction(sessionmaker, callback)
             else:
-                potential = db.session.query(Students).filter(Students.course == course, Students.skill == skill, Students.size == size)
+                potential = db.session.query(Students).filter(Students.course == course, Students.skill == skill, Students.size == size, Students.group_name == None)
                 potential = potential.limit(int(size))
+                group_ids = []
                 m = ''
                 for i in potential:
+                    group_ids.append(i.sid)
                     m += i.name + ' '
                 m = 'Your team members are: ' + m
+                group_name = group_ids[0]
 
                 def callback(session):
+                    for i in group_ids:
+                        db.session.query(Students).filter(Students.sid == i).update({Students.group_name : group_name})
+                    db.session.commit()
                     return render_template('success.html', message=m)
                 #send_mail(customer, dealer, rating, comments)
                 return run_transaction(sessionmaker, callback)
