@@ -28,3 +28,5 @@ Note: postgres will work fine as an alternate.
 ## Run application locally
 1. Enter pipenv shell
 2. run app.py
+
+Devpost: https://devpost.com/software/groupme
